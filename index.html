@@ -1,308 +1,291 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2575.4">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; -webkit-text-stroke: #000000}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; -webkit-text-stroke: #000000; min-height: 14.0px}
-    span.s1 {font-kerning: none}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taya Navi</title>
+<link rel="icon" type="image/png" href="favicon.png">
+
+<style>
+:root{
+  --bg:#0b1e2d;      
+  --card:#112b3c;      
+  --text:#f1f5f9;      
+  --border:#1f3a4d;    
+
+  --green:#1bb76e;
+  --blue:#3b82f6;
+  --red:#e53935;
+}
+.light{
+  --bg:#f4f6fb;
+  --card:#ffffff;
+  --text:#111;
+  --border:#d0d6e2;
+}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  margin:0;
+  padding:30px;
+}
+.container{max-width:1000px;margin:auto}
+.card{
+  background:var(--card);
+  padding:20px;
+  border-radius:14px;
+  margin-bottom:20px;
+}
+textarea,select{
+  width:100%;
+  background:var(--bg);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:10px;
+  margin-top:6px;
+}
+textarea::placeholder{
+  opacity:0.4;
+}
+button{
+  padding:6px 12px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  cursor:pointer;
+  margin-right:8px;
+}
+.btn-generate{background:var(--green);color:white;border:none;}
+.btn-open{background:var(--blue);color:white;border:none;}
+.btn-copy{background:transparent;color:var(--text);}
+.btn-clear{background:var(--red);color:white;border:none;}
+.group{
+  margin-bottom:15px;
+  position:relative;
+}
+.remove-btn{
+  position:absolute;
+  right:0;
+  top:0;
+  font-size:12px;
+  cursor:pointer;
+  opacity:.65;
+}
+.footer{
+  margin-top:30px;
+  font-size:11px;
+  opacity:.35;
+  word-break:break-all;
+}
+.history-item{
+  font-size:12px;
+  border:1px solid var(--border);
+  padding:8px;
+  border-radius:8px;
+  margin-bottom:8px;
+}
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+.controls{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+.toggle{cursor:pointer;opacity:.7;}
+hr{margin:18px 0;opacity:.2}
+</style>
 </head>
-<body>
-<p class="p1"><span class="s1">&lt;!DOCTYPE html&gt;</span></p>
-<p class="p1"><span class="s1">&lt;html lang="en"&gt;</span></p>
-<p class="p1"><span class="s1">&lt;head&gt;</span></p>
-<p class="p1"><span class="s1">&lt;meta charset="UTF-8"&gt;</span></p>
-<p class="p1"><span class="s1">&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</span></p>
-<p class="p1"><span class="s1">&lt;title&gt;Taya Navi&lt;/title&gt;</span></p>
-<p class="p1"><span class="s1">&lt;link rel="icon" type="image/png" href="favicon.png"&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">&lt;style&gt;</span></p>
-<p class="p1"><span class="s1">:root{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>--bg:#0b1e2d; <span class="Apple-converted-space">     </span></span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>--card:#112b3c; <span class="Apple-converted-space">     </span></span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>--text:#f1f5f9; <span class="Apple-converted-space">     </span></span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>--border:#1f3a4d; <span class="Apple-converted-space">   </span></span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>--green:#1bb76e;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>--blue:#3b82f6;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>--red:#e53935;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">.light{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>--bg:#f4f6fb;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>--card:#ffffff;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>--text:#111;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>--border:#d0d6e2;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">body{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>background:var(--bg);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>color:var(--text);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>margin:0;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>padding:30px;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">.container{max-width:1000px;margin:auto}</span></p>
-<p class="p1"><span class="s1">.card{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>background:var(--card);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>padding:20px;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>border-radius:14px;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>margin-bottom:20px;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">textarea,select{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>width:100%;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>background:var(--bg);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>color:var(--text);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>border:1px solid var(--border);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>border-radius:10px;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>padding:10px;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>margin-top:6px;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">textarea::placeholder{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>opacity:0.4;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">button{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>padding:6px 12px;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>border-radius:8px;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>border:1px solid var(--border);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>cursor:pointer;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>margin-right:8px;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">.btn-generate{background:var(--green);color:white;border:none;}</span></p>
-<p class="p1"><span class="s1">.btn-open{background:var(--blue);color:white;border:none;}</span></p>
-<p class="p1"><span class="s1">.btn-copy{background:transparent;color:var(--text);}</span></p>
-<p class="p1"><span class="s1">.btn-clear{background:var(--red);color:white;border:none;}</span></p>
-<p class="p1"><span class="s1">.group{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>margin-bottom:15px;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>position:relative;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">.remove-btn{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>position:absolute;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>right:0;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>top:0;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>font-size:12px;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>cursor:pointer;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>opacity:.65;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">.footer{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>margin-top:30px;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>font-size:11px;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>opacity:.35;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>word-break:break-all;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">.history-item{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>font-size:12px;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>border:1px solid var(--border);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>padding:8px;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>border-radius:8px;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>margin-bottom:8px;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">.topbar{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>display:flex;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>justify-content:space-between;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>align-items:center;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>gap:10px;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">.controls{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>display:flex;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>gap:10px;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>align-items:center;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">.toggle{cursor:pointer;opacity:.7;}</span></p>
-<p class="p1"><span class="s1">hr{margin:18px 0;opacity:.2}</span></p>
-<p class="p1"><span class="s1">&lt;/style&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/head&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">&lt;body class="light"&gt;</span></p>
-<p class="p1"><span class="s1">&lt;div class="container"&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">&lt;div class="topbar"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;h2 id="ui_title"&gt;Taya Navi v1.1&lt;/h2&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;div class="controls"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;select id="lang" onchange="applyLanguage()"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;option value="en" selected&gt;English&lt;/option&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;option value="ja"&gt;日本語&lt;/option&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;option value="zh_cn"&gt;中文 (简体)&lt;/option&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;option value="zh_tw"&gt;中文 (繁體)&lt;/option&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;option value="mn"&gt;Монгол&lt;/option&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/select&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="toggle" onclick="toggleTheme()"&gt;🌙 / ☀&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">&lt;div class="card"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;label&gt;&lt;b id="ui_company_label"&gt;Company Names&lt;/b&gt;&lt;/label&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;textarea id="companies" placeholder=""&gt;&lt;/textarea&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;label&gt;&lt;b id="ui_mode_label"&gt;Mode&lt;/b&gt;&lt;/label&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;select id="mode"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;option value="PAST" id="ui_mode_past"&gt;Former only (exclude current)&lt;/option&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;option value="CURRENT" id="ui_mode_current"&gt;Current only&lt;/option&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;option value="BOTH" id="ui_mode_both"&gt;Both (Current + Past)&lt;/option&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;/select&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;hr&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;div id="keywordContainer"&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;button id="ui_add_group" onclick="addKeywordGroup()"&gt;+ Add Keyword Group (AND)&lt;/button&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;br&gt;&lt;br&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;button class="btn-generate" onclick="generate()" id="ui_btn_generate"&gt;Generate&lt;/button&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;button class="btn-open" onclick="openURL()" id="ui_btn_open"&gt;Open&lt;/button&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;button class="btn-copy" onclick="copyURL()" id="ui_btn_copy"&gt;Copy&lt;/button&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;button class="btn-clear" onclick="clearAllInputs()" id="ui_btn_clear"&gt;Clear All&lt;/button&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">&lt;div class="card"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;h3 id="ui_exp_companies"&gt;Expanded Companies&lt;/h3&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;textarea id="expandedCompanies" readonly&gt;&lt;/textarea&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;h3 id="ui_exp_keywords"&gt;Expanded Keywords&lt;/h3&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;textarea id="expandedKeywords" readonly&gt;&lt;/textarea&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">&lt;div class="card"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;h3 id="ui_history_title"&gt;Recent Searches&lt;/h3&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;div id="historyList"&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;button class="btn-clear" onclick="clearHistory()" id="ui_clear_history"&gt;Clear History&lt;/button&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">&lt;div class="footer" id="urlFooter"&gt;&lt;/div&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">&lt;script&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">const SPLIT_REGEX=/[\r\n,，、。:：・\/\\;；]+/g;</span></p>
-<p class="p1"><span class="s1">const MAX_GROUPS=4;</span></p>
-<p class="p1"><span class="s1">const MAX_HISTORY=10;</span></p>
-<p class="p1"><span class="s1">const LS_KEY="tayaHistory_v34";</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">let keywordGroups=[];</span></p>
-<p class="p1"><span class="s1">let generatedURL="";</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">const LANG = {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>en:{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>company:"Company Names",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>mode:"Mode",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>past:"Former only (exclude current)",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>current:"Current only",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>both:"Both (Current + Past)",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>add:"+ Add Keyword Group (AND)",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>generate:"Generate",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>open:"Open",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>copy:"Copy",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>clear:"Clear All",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>history:"Recent Searches",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>clearHistory:"Clear History",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>confirmClear:"Are you sure you want to clear all inputs?",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>confirmHistory:"Clear all history?",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>hint:"You can separate by line break or symbols like , ， 、 。 / ："</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>},</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>ja:{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>company:"会社名",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>mode:"モード",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>past:"過去のみ（現在を除外）",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>current:"現在のみ",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>both:"現在＋過去",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>add:"+ キーワードグループ追加 (AND)",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>generate:"生成",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>open:"開く",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>copy:"コピー",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>clear:"すべてクリア",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>history:"最近の検索",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>clearHistory:"履歴を削除",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>confirmClear:"入力内容をすべてクリアしますか？",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>confirmHistory:"履歴をすべて削除しますか？",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>hint:"改行または , ， 、 。 / ： などで区切れます"</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>},</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>zh_cn:{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>company:"公司名称",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>mode:"模式",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>past:"仅过去（排除当前）",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>current:"仅当前",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>both:"当前 + 过去",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>add:"+ 添加关键词组 (AND)",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>generate:"生成",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>open:"打开",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>copy:"复制",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>clear:"清空全部",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>history:"最近搜索",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>clearHistory:"清空历史",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>confirmClear:"确定要清空所有输入内容吗？",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>confirmHistory:"确定要清空历史记录吗？",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>hint:"可使用换行或 , ， 、 。 / ： 等符号分隔"</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>},</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>zh_tw:{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>company:"公司名稱",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>mode:"模式",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>past:"僅過去（排除當前）",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>current:"僅當前",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>both:"當前 + 過去",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>add:"+ 新增關鍵字群組 (AND)",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>generate:"產生",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>open:"開啟",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>copy:"複製",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>clear:"全部清除",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>history:"最近搜尋",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>clearHistory:"清除歷史",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>confirmClear:"確定要清空所有輸入內容嗎？",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>confirmHistory:"確定要清空歷史紀錄嗎？",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>hint:"可使用換行或 , ， 、 。 / ： 等符號分隔"</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>},</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>mn:{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>company:"Компанийн нэр",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>mode:"Горим",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>past:"Зөвхөн өмнөх",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>current:"Зөвхөн одоогийн",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>both:"Одоогийн + Өмнөх",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>add:"+ Түлхүүр үг нэмэх",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>generate:"Үүсгэх",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>open:"Нээх",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>copy:"Хуулах",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>clear:"Бүгдийг цэвэрлэх",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>history:"Сүүлийн хайлтууд",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>clearHistory:"Түүх устгах",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>confirmClear:"Бүх оруулсан мэдээллийг устгах уу?",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>confirmHistory:"Бүх түүхийг устгах уу?",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>hint:"Мөр сольж эсвэл , ， 、 。 / ： тэмдэгтээр салгаж болно"</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}</span></p>
-<p class="p1"><span class="s1">};</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">function applyLanguage(){</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const lang=document.getElementById("lang").value;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const t=LANG[lang]||LANG.en;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>document.getElementById("ui_company_label").innerText=t.company;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>document.getElementById("ui_mode_label").innerText=t.mode;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>document.getElementById("ui_mode_past").innerText=t.past;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>document.getElementById("ui_mode_current").innerText=t.current;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>document.getElementById("ui_mode_both").innerText=t.both;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>document.getElementById("ui_add_group").innerText=t.add;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>document.getElementById("ui_btn_generate").innerText=t.generate;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>document.getElementById("ui_btn_open").innerText=t.open;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>document.getElementById("ui_btn_copy").innerText=t.copy;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>document.getElementById("ui_btn_clear").innerText=t.clear;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>document.getElementById("ui_history_title").innerText=t.history;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>document.getElementById("ui_clear_history").innerText=t.clearHistory;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>document.getElementById("companies").placeholder=t.hint;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>keywordGroups.forEach(id=&gt;{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>const el=document.getElementById(id);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>if(el) el.placeholder=t.hint;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>});</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">addKeywordGroup("");</span></p>
-<p class="p1"><span class="s1">renderHistory();</span></p>
-<p class="p1"><span class="s1">applyLanguage();</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">&lt;/script&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/body&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/html&gt;</span></p>
+
+<body class="light">
+<div class="container">
+
+<div class="topbar">
+  <h2 id="ui_title">Taya Navi v1.1</h2>
+  <div class="controls">
+    <select id="lang" onchange="applyLanguage()">
+      <option value="en" selected>English</option>
+      <option value="ja">日本語</option>
+      <option value="zh_cn">中文 (简体)</option>
+      <option value="zh_tw">中文 (繁體)</option>
+      <option value="mn">Монгол</option>
+    </select>
+    <div class="toggle" onclick="toggleTheme()">🌙 / ☀</div>
+  </div>
+</div>
+
+<div class="card">
+  <label><b id="ui_company_label">Company Names</b></label>
+  <textarea id="companies" placeholder=""></textarea>
+
+  <label><b id="ui_mode_label">Mode</b></label>
+  <select id="mode">
+    <option value="PAST" id="ui_mode_past">Former only (exclude current)</option>
+    <option value="CURRENT" id="ui_mode_current">Current only</option>
+    <option value="BOTH" id="ui_mode_both">Both (Current + Past)</option>
+  </select>
+
+  <hr>
+
+  <div id="keywordContainer"></div>
+  <button id="ui_add_group" onclick="addKeywordGroup()">+ Add Keyword Group (AND)</button>
+
+  <br><br>
+
+  <button class="btn-generate" onclick="generate()" id="ui_btn_generate">Generate</button>
+  <button class="btn-open" onclick="openURL()" id="ui_btn_open">Open</button>
+  <button class="btn-copy" onclick="copyURL()" id="ui_btn_copy">Copy</button>
+  <button class="btn-clear" onclick="clearAllInputs()" id="ui_btn_clear">Clear All</button>
+</div>
+
+<div class="card">
+  <h3 id="ui_exp_companies">Expanded Companies</h3>
+  <textarea id="expandedCompanies" readonly></textarea>
+
+  <h3 id="ui_exp_keywords">Expanded Keywords</h3>
+  <textarea id="expandedKeywords" readonly></textarea>
+</div>
+
+<div class="card">
+  <h3 id="ui_history_title">Recent Searches</h3>
+  <div id="historyList"></div>
+  <button class="btn-clear" onclick="clearHistory()" id="ui_clear_history">Clear History</button>
+</div>
+
+<div class="footer" id="urlFooter"></div>
+
+</div>
+
+<script>
+
+const SPLIT_REGEX=/[\r\n,，、。:：・\/\\;；]+/g;
+const MAX_GROUPS=4;
+const MAX_HISTORY=10;
+const LS_KEY="tayaHistory_v34";
+
+let keywordGroups=[];
+let generatedURL="";
+
+const LANG = {
+  en:{
+    company:"Company Names",
+    mode:"Mode",
+    past:"Former only (exclude current)",
+    current:"Current only",
+    both:"Both (Current + Past)",
+    add:"+ Add Keyword Group (AND)",
+    generate:"Generate",
+    open:"Open",
+    copy:"Copy",
+    clear:"Clear All",
+    history:"Recent Searches",
+    clearHistory:"Clear History",
+    confirmClear:"Are you sure you want to clear all inputs?",
+    confirmHistory:"Clear all history?",
+    hint:"You can separate by line break or symbols like , ， 、 。 / ："
+  },
+  ja:{
+    company:"会社名",
+    mode:"モード",
+    past:"過去のみ（現在を除外）",
+    current:"現在のみ",
+    both:"現在＋過去",
+    add:"+ キーワードグループ追加 (AND)",
+    generate:"生成",
+    open:"開く",
+    copy:"コピー",
+    clear:"すべてクリア",
+    history:"最近の検索",
+    clearHistory:"履歴を削除",
+    confirmClear:"入力内容をすべてクリアしますか？",
+    confirmHistory:"履歴をすべて削除しますか？",
+    hint:"改行または , ， 、 。 / ： などで区切れます"
+  },
+  zh_cn:{
+    company:"公司名称",
+    mode:"模式",
+    past:"仅过去（排除当前）",
+    current:"仅当前",
+    both:"当前 + 过去",
+    add:"+ 添加关键词组 (AND)",
+    generate:"生成",
+    open:"打开",
+    copy:"复制",
+    clear:"清空全部",
+    history:"最近搜索",
+    clearHistory:"清空历史",
+    confirmClear:"确定要清空所有输入内容吗？",
+    confirmHistory:"确定要清空历史记录吗？",
+    hint:"可使用换行或 , ， 、 。 / ： 等符号分隔"
+  },
+  zh_tw:{
+    company:"公司名稱",
+    mode:"模式",
+    past:"僅過去（排除當前）",
+    current:"僅當前",
+    both:"當前 + 過去",
+    add:"+ 新增關鍵字群組 (AND)",
+    generate:"產生",
+    open:"開啟",
+    copy:"複製",
+    clear:"全部清除",
+    history:"最近搜尋",
+    clearHistory:"清除歷史",
+    confirmClear:"確定要清空所有輸入內容嗎？",
+    confirmHistory:"確定要清空歷史紀錄嗎？",
+    hint:"可使用換行或 , ， 、 。 / ： 等符號分隔"
+  },
+  mn:{
+    company:"Компанийн нэр",
+    mode:"Горим",
+    past:"Зөвхөн өмнөх",
+    current:"Зөвхөн одоогийн",
+    both:"Одоогийн + Өмнөх",
+    add:"+ Түлхүүр үг нэмэх",
+    generate:"Үүсгэх",
+    open:"Нээх",
+    copy:"Хуулах",
+    clear:"Бүгдийг цэвэрлэх",
+    history:"Сүүлийн хайлтууд",
+    clearHistory:"Түүх устгах",
+    confirmClear:"Бүх оруулсан мэдээллийг устгах уу?",
+    confirmHistory:"Бүх түүхийг устгах уу?",
+    hint:"Мөр сольж эсвэл , ， 、 。 / ： тэмдэгтээр салгаж болно"
+  }
+};
+
+function applyLanguage(){
+  const lang=document.getElementById("lang").value;
+  const t=LANG[lang]||LANG.en;
+
+  document.getElementById("ui_company_label").innerText=t.company;
+  document.getElementById("ui_mode_label").innerText=t.mode;
+  document.getElementById("ui_mode_past").innerText=t.past;
+  document.getElementById("ui_mode_current").innerText=t.current;
+  document.getElementById("ui_mode_both").innerText=t.both;
+  document.getElementById("ui_add_group").innerText=t.add;
+  document.getElementById("ui_btn_generate").innerText=t.generate;
+  document.getElementById("ui_btn_open").innerText=t.open;
+  document.getElementById("ui_btn_copy").innerText=t.copy;
+  document.getElementById("ui_btn_clear").innerText=t.clear;
+  document.getElementById("ui_history_title").innerText=t.history;
+  document.getElementById("ui_clear_history").innerText=t.clearHistory;
+
+  document.getElementById("companies").placeholder=t.hint;
+  keywordGroups.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.placeholder=t.hint;
+  });
+}
+
+addKeywordGroup("");
+renderHistory();
+applyLanguage();
+
+</script>
 </body>
 </html>
