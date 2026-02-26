@@ -111,12 +111,6 @@ hr{margin:18px 0;opacity:.2}
 .ai-panel textarea{
   height:120px;
 }
-
-.ai-hint{
-  font-size:11px;
-  opacity:.5;
-  margin-top:8px;
-}
 </style>
 </head>
 
@@ -179,12 +173,13 @@ hr{margin:18px 0;opacity:.2}
 <div class="footer" id="urlFooter"></div>
 
 </div>
+
+<!-- AI PANEL -->
 <div class="ai-panel">
   <h3>AI Formatter</h3>
   <textarea id="aiInput" placeholder="Paste company names here..."></textarea>
-  <div class="ai-hint">Shortcut: Ctrl + Shift + G</div>
+  <button class="btn-open" onclick="runGeminiFormatter()">Format with Gemini</button>
 </div>
-<script>
 
 const SPLIT_REGEX=/[\r\n,，、。:：・\/\\;；Ø|]+/g;
 const MAX_GROUPS=4;
@@ -453,17 +448,15 @@ addKeywordGroup("");
 renderHistory();
 applyLanguage();
 
-document.addEventListener("keydown", function(e){
+function runGeminiFormatter(){
 
-  if((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "g"){
+  const input = document.getElementById("aiInput").value.trim();
+  if(!input){
+    alert("Please enter company names in AI panel.");
+    return;
+  }
 
-    const input = document.getElementById("aiInput").value.trim();
-    if(!input){
-      alert("Please enter company names in AI panel.");
-      return;
-    }
-
-    const prompt = `Standardize the following company names.
+  const prompt = `Standardize the following company names.
 
 For each company, provide:
 1. Official Japanese name
@@ -481,9 +474,9 @@ Companies:
 ${input}
 `;
 
-    navigator.clipboard.writeText(prompt);
-    window.open("https://gemini.google.com/", "_blank");
-  }
+  navigator.clipboard.writeText(prompt);
+  window.open("https://gemini.google.com/", "_blank");
+}
 });
 
 </script>
