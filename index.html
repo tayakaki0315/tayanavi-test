@@ -46,9 +46,6 @@ textarea,select{
   padding:10px;
   margin-top:6px;
 }
-textarea::placeholder{
-  opacity:0.4;
-}
 button{
   padding:6px 12px;
   border-radius:8px;
@@ -98,6 +95,28 @@ button{
 }
 .toggle{cursor:pointer;opacity:.7;}
 hr{margin:18px 0;opacity:.2}
+
+
+.ai-panel{
+  position:fixed;
+  right:20px;
+  top:120px;
+  width:260px;
+  background:var(--card);
+  padding:15px;
+  border-radius:14px;
+  box-shadow:0 5px 20px rgba(0,0,0,.2);
+}
+
+.ai-panel textarea{
+  height:120px;
+}
+
+.ai-hint{
+  font-size:11px;
+  opacity:.5;
+  margin-top:8px;
+}
 </style>
 </head>
 
@@ -108,19 +127,19 @@ hr{margin:18px 0;opacity:.2}
   <h2 id="ui_title">Taya Navi v1.1</h2>
   <div class="controls">
     <select id="lang" onchange="applyLanguage()">
-      <option value="en" selected>English</option>
-      <option value="ja">日本語</option>
-      <option value="zh_cn">中文 (简体)</option>
-      <option value="zh_tw">中文 (繁體)</option>
-      <option value="mn">Монгол</option>
-    </select>
+  <option value="en" selected>English</option>
+  <option value="ja">日本語</option>
+  <option value="zh_cn">中文 (简体)</option>
+  <option value="zh_tw">中文 (繁體)</option>
+  <option value="mn">Монгол</option>
+</select>
     <div class="toggle" onclick="toggleTheme()">🌙 / ☀</div>
   </div>
 </div>
 
 <div class="card">
   <label><b id="ui_company_label">Company Names</b></label>
-  <textarea id="companies" placeholder=""></textarea>
+  <textarea id="companies"></textarea>
 
   <label><b id="ui_mode_label">Mode</b></label>
   <select id="mode">
@@ -150,6 +169,7 @@ hr{margin:18px 0;opacity:.2}
   <textarea id="expandedKeywords" readonly></textarea>
 </div>
 
+
 <div class="card">
   <h3 id="ui_history_title">Recent Searches</h3>
   <div id="historyList"></div>
@@ -159,10 +179,14 @@ hr{margin:18px 0;opacity:.2}
 <div class="footer" id="urlFooter"></div>
 
 </div>
-
+<div class="ai-panel">
+  <h3>AI Formatter</h3>
+  <textarea id="aiInput" placeholder="Paste company names here..."></textarea>
+  <div class="ai-hint">Shortcut: Ctrl + Shift + G</div>
+</div>
 <script>
 
-const SPLIT_REGEX=/[\r\n,，、。:：・\/\\;；]+/g;
+const SPLIT_REGEX=/[\r\n,，、。:：・\/\\;；Ø|]+/g;
 const MAX_GROUPS=4;
 const MAX_HISTORY=10;
 const LS_KEY="tayaHistory_v34";
@@ -185,15 +209,14 @@ const LANG = {
     history:"Recent Searches",
     clearHistory:"Clear History",
     confirmClear:"Are you sure you want to clear all inputs?",
-    confirmHistory:"Clear all history?",
-    hint:"You can separate by line break or symbols like , ， 、 。 / ："
+    confirmHistory:"Clear all history?"
   },
   ja:{
     company:"会社名",
     mode:"モード",
-    past:"過去のみ（現在を除外）",
-    current:"現在のみ",
-    both:"現在＋過去",
+    past:"元職のみ（現職を除外）",
+    current:"現職のみ",
+    both:"現職＋元職",
     add:"+ キーワードグループ追加 (AND)",
     generate:"生成",
     open:"開く",
@@ -202,8 +225,7 @@ const LANG = {
     history:"最近の検索",
     clearHistory:"履歴を削除",
     confirmClear:"入力内容をすべてクリアしますか？",
-    confirmHistory:"履歴をすべて削除しますか？",
-    hint:"改行または , ， 、 。 / ： などで区切れます"
+    confirmHistory:"履歴をすべて削除しますか？"
   },
   zh_cn:{
     company:"公司名称",
@@ -219,8 +241,7 @@ const LANG = {
     history:"最近搜索",
     clearHistory:"清空历史",
     confirmClear:"确定要清空所有输入内容吗？",
-    confirmHistory:"确定要清空历史记录吗？",
-    hint:"可使用换行或 , ， 、 。 / ： 等符号分隔"
+    confirmHistory:"确定要清空历史记录吗？"
   },
   zh_tw:{
     company:"公司名稱",
@@ -236,8 +257,7 @@ const LANG = {
     history:"最近搜尋",
     clearHistory:"清除歷史",
     confirmClear:"確定要清空所有輸入內容嗎？",
-    confirmHistory:"確定要清空歷史紀錄嗎？",
-    hint:"可使用換行或 , ， 、 。 / ： 等符號分隔"
+    confirmHistory:"確定要清空歷史紀錄嗎？"
   },
   mn:{
     company:"Компанийн нэр",
@@ -253,10 +273,163 @@ const LANG = {
     history:"Сүүлийн хайлтууд",
     clearHistory:"Түүх устгах",
     confirmClear:"Бүх оруулсан мэдээллийг устгах уу?",
-    confirmHistory:"Бүх түүхийг устгах уу?",
-    hint:"Мөр сольж эсвэл , ， 、 。 / ： тэмдэгтээр салгаж болно"
+    confirmHistory:"Бүх түүхийг устгах уу?"
   }
 };
+  
+function uniq(arr){return [...new Set(arr.map(x=>x.trim()).filter(Boolean))];}
+
+function encForKeywords(raw){
+  const once = encodeURIComponent(raw)
+    .replace(/\(/g,"%28")
+    .replace(/\)/g,"%29");
+  return once.replace(/%/g,"%25");
+}
+
+function encForCompany(raw){
+  const once = encodeURIComponent(raw);
+  return once.replace(/%/g,"%25");
+}
+
+function formatGroup(raw){
+  const list=uniq((raw||"").split(SPLIT_REGEX));
+  if(!list.length) return "";
+  return list.map(k=>{
+    if(/[\u4e00-\u9fff]/.test(k)) return `“${k}”`;
+    return `"${k}"`;
+  }).join(" OR ");
+}
+
+function buildFilters(names,mode){
+  function values(list,type){
+    return list.map(n=>`(text%3A${encForCompany(n)}%2CselectionType%3A${type})`).join("%2C");
+  }
+  if(mode==="PAST")
+    return `(type%3APAST_COMPANY%2Cvalues%3AList(${values(names,"INCLUDED")}))%2C(type%3ACURRENT_COMPANY%2Cvalues%3AList(${values(names,"EXCLUDED")}))`;
+  if(mode==="CURRENT")
+    return `(type%3ACURRENT_COMPANY%2Cvalues%3AList(${values(names,"INCLUDED")}))`;
+  return `(type%3APAST_COMPANY%2Cvalues%3AList(${values(names,"INCLUDED")}))%2C(type%3ACURRENT_COMPANY%2Cvalues%3AList(${values(names,"INCLUDED")}))`;
+}
+
+function generate(){
+  const companies=document.getElementById("companies").value;
+  const mode=document.getElementById("mode").value;
+  const names=uniq((companies||"").split(SPLIT_REGEX));
+  document.getElementById("expandedCompanies").value=names.join("\n");
+
+  const filters=buildFilters(names,mode);
+  const groupsFormatted=keywordGroups.map(id=>formatGroup(document.getElementById(id).value)).filter(Boolean);
+  const keywordString=groupsFormatted.map(g=>`(${g})`).join(" AND ");
+  document.getElementById("expandedKeywords").value=keywordString;
+
+  const keywordBlock=keywordString?`%2Ckeywords%3A${encForKeywords(keywordString)}`:"";
+  const query=`(spellCorrectionEnabled%3Atrue%2CrecentSearchParam%3A(doLogHistory%3Atrue)%2Cfilters%3AList(${filters})${keywordBlock})`;
+  generatedURL=`https://www.linkedin.com/sales/search/people?query=${query}&viewAllFilters=true`;
+  document.getElementById("urlFooter").innerText=generatedURL;
+  saveHistory();
+}
+
+function copyURL(){if(generatedURL)navigator.clipboard.writeText(generatedURL);}
+function openURL(){if(generatedURL)window.open(generatedURL,"_blank");}
+
+function addKeywordGroup(value=""){
+  if(keywordGroups.length>=MAX_GROUPS)return;
+  const id="kw"+Date.now();
+  keywordGroups.push(id);
+  const div=document.createElement("div");
+  div.className="group";
+  div.innerHTML=`<label><b>Keyword Group (${keywordGroups.length})</b></label>
+  <span class="remove-btn" onclick="removeGroup('${id}')">Remove</span>
+  <textarea id="${id}">${value}</textarea>`;
+  document.getElementById("keywordContainer").appendChild(div);
+}
+
+function removeGroup(id){
+  keywordGroups=keywordGroups.filter(x=>x!==id);
+  document.getElementById(id).parentElement.remove();
+}
+
+function clearAllInputs(){
+  const msgs={
+    en:"Are you sure you want to clear all inputs?",
+    ja:"入力内容をすべてクリアしますか？",
+    zh:"确定要清空所有输入内容吗？"
+  };
+  const lang=document.getElementById("lang").value;
+  if(!confirm(msgs[lang]||msgs.en))return;
+
+  document.getElementById("companies").value="";
+  document.getElementById("mode").value="PAST";
+  document.getElementById("keywordContainer").innerHTML="";
+  keywordGroups=[];
+  addKeywordGroup("");
+  document.getElementById("expandedCompanies").value="";
+  document.getElementById("expandedKeywords").value="";
+  document.getElementById("urlFooter").innerText="";
+  generatedURL="";
+}
+
+function saveHistory(){
+  if(!generatedURL)return;
+  const history=JSON.parse(localStorage.getItem(LS_KEY)||"[]");
+  history.unshift({
+    companies:document.getElementById("companies").value,
+    mode:document.getElementById("mode").value,
+    keywords:keywordGroups.map(id=>document.getElementById(id).value),
+    url:generatedURL,
+    time:new Date().toLocaleString()
+  });
+  localStorage.setItem(LS_KEY,JSON.stringify(history.slice(0,MAX_HISTORY)));
+  renderHistory();
+}
+
+function renderHistory(){
+  const history=JSON.parse(localStorage.getItem(LS_KEY)||"[]");
+  const container=document.getElementById("historyList");
+  container.innerHTML="";
+  history.forEach((item,index)=>{
+    const div=document.createElement("div");
+    div.className="history-item";
+    div.innerHTML=`<b>${item.time}</b><br>${item.companies}<br>
+    <button onclick="loadHistory(${index})">Load</button>
+    <button onclick="deleteHistory(${index})">Delete</button>`;
+    container.appendChild(div);
+  });
+}
+
+function loadHistory(index){
+  const history=JSON.parse(localStorage.getItem(LS_KEY)||"[]");
+  const item=history[index];
+  if(!item)return;
+  document.getElementById("companies").value=item.companies;
+  document.getElementById("mode").value=item.mode;
+  document.getElementById("keywordContainer").innerHTML="";
+  keywordGroups=[];
+  item.keywords.forEach(k=>addKeywordGroup(k));
+  generatedURL=item.url;
+  document.getElementById("urlFooter").innerText=generatedURL;
+}
+
+function deleteHistory(index){
+  const history=JSON.parse(localStorage.getItem(LS_KEY)||"[]");
+  history.splice(index,1);
+  localStorage.setItem(LS_KEY,JSON.stringify(history));
+  renderHistory();
+}
+
+function clearHistory(){
+  const msgs={
+    en:"Clear all history?",
+    ja:"履歴をすべて削除しますか？",
+    zh:"确定要清空历史记录吗？"
+  };
+  const lang=document.getElementById("lang").value;
+  if(!confirm(msgs[lang]||msgs.en))return;
+  localStorage.removeItem(LS_KEY);
+  renderHistory();
+}
+
+function toggleTheme(){document.body.classList.toggle("light");}
 
 function applyLanguage(){
   const lang=document.getElementById("lang").value;
@@ -274,17 +447,44 @@ function applyLanguage(){
   document.getElementById("ui_btn_clear").innerText=t.clear;
   document.getElementById("ui_history_title").innerText=t.history;
   document.getElementById("ui_clear_history").innerText=t.clearHistory;
-
-  document.getElementById("companies").placeholder=t.hint;
-  keywordGroups.forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.placeholder=t.hint;
-  });
 }
-
+  
 addKeywordGroup("");
 renderHistory();
 applyLanguage();
+
+document.addEventListener("keydown", function(e){
+
+  if((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "g"){
+
+    const input = document.getElementById("aiInput").value.trim();
+    if(!input){
+      alert("Please enter company names in AI panel.");
+      return;
+    }
+
+    const prompt = `Standardize the following company names.
+
+For each company, provide:
+1. Official Japanese name
+2. Official English name
+
+Only return the company names.
+Do NOT include legal suffixes such as Co., Ltd., Inc., Ltd., Corporation, 株式会社, 有限公司, etc.
+Do NOT add explanations.
+Do NOT add numbering.
+Return in this format:
+
+Japanese Name | English Name
+
+Companies:
+${input}
+`;
+
+    navigator.clipboard.writeText(prompt);
+    window.open("https://gemini.google.com/", "_blank");
+  }
+});
 
 </script>
 </body>
