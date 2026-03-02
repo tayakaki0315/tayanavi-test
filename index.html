@@ -12,6 +12,7 @@
   --card:#112b3c;      
   --text:#f1f5f9;      
   --border:#1f3a4d;    
+
   --green:#1bb76e;
   --blue:#3b82f6;
   --red:#e53935;
@@ -45,9 +46,6 @@ textarea,select{
   padding:10px;
   margin-top:6px;
 }
-textarea.large{
-  min-height:160px;   /* 🔥 company 默认变大 */
-}
 button{
   padding:6px 12px;
   border-radius:8px;
@@ -59,7 +57,10 @@ button{
 .btn-open{background:var(--blue);color:white;border:none;}
 .btn-copy{background:transparent;color:var(--text);}
 .btn-clear{background:var(--red);color:white;border:none;}
-.group{margin-bottom:15px;position:relative;}
+.group{
+  margin-bottom:15px;
+  position:relative;
+}
 .remove-btn{
   position:absolute;
   right:0;
@@ -87,63 +88,72 @@ button{
   align-items:center;
   gap:10px;
 }
-.controls{display:flex;gap:10px;align-items:center;}
+.controls{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
 .toggle{cursor:pointer;opacity:.7;}
 hr{margin:18px 0;opacity:.2}
 
-.desc{
-  font-size:12px;
-  opacity:.55;
-  margin-bottom:6px;
+.layout{
+  display:flex;
+  gap:30px;
+}
+
+.sidebar{
+  width:260px;
+  font-size:13px;
+  opacity:.8;
+  line-height:1.6;
+}
+
+.sidebar h3{
+  margin-top:0;
+}
+
+.container{
+  flex:1;
+  max-width:1000px;
 }
 </style>
 </head>
 
 <body class="light">
-<div class="container">
+  
+<div class="layout">
+  <div class="sidebar" id="sidebarGuide"></div>
+  <div class="container">
 
 <div class="topbar">
   <h2 id="ui_title">Taya Navi v1.1</h2>
   <div class="controls">
     <select id="lang" onchange="applyLanguage()">
-      <option value="en">English</option>
-      <option value="ja">日本語</option>
-      <option value="zh_cn">中文 (简体)</option>
-      <option value="zh_tw">中文 (繁體)</option>
-      <option value="mn">Монгол</option>
-    </select>
+  <option value="en" selected>English</option>
+  <option value="ja">日本語</option>
+  <option value="zh_cn">中文 (简体)</option>
+  <option value="zh_tw">中文 (繁體)</option>
+  <option value="mn">Монгол</option>
+</select>
     <div class="toggle" onclick="toggleTheme()">🌙 / ☀</div>
   </div>
 </div>
 
 <div class="card">
-
   <label><b id="ui_company_label">Company Names</b></label>
-  <div class="desc" id="ui_company_desc">
-    Separate with: Enter / , / ， / 、 / ; / |
-  </div>
-  <textarea id="companies" class="large"
-  placeholder="Panasonic
-Sony, Mitsubishi | Toshiba"></textarea>
+  <textarea id="companies"></textarea>
 
   <label><b id="ui_mode_label">Mode</b></label>
-  <div class="desc" id="ui_mode_desc">
-    Choose how company filter should apply.
-  </div>
   <select id="mode">
-    <option value="PAST" id="ui_mode_past">Former only</option>
+    <option value="PAST" id="ui_mode_past">Former only (exclude current)</option>
     <option value="CURRENT" id="ui_mode_current">Current only</option>
-    <option value="BOTH" id="ui_mode_both">Both</option>
+    <option value="BOTH" id="ui_mode_both">Both (Current + Past)</option>
   </select>
 
   <hr>
 
-  <div class="desc" id="ui_keyword_desc">
-    Each group = OR ｜ Multiple groups = AND
-  </div>
-
   <div id="keywordContainer"></div>
-  <button id="ui_add_group" onclick="addKeywordGroup()">+ Add Keyword Group</button>
+  <button id="ui_add_group" onclick="addKeywordGroup()">+ Add Keyword Group (AND)</button>
 
   <br><br>
 
@@ -153,6 +163,20 @@ Sony, Mitsubishi | Toshiba"></textarea>
   <button class="btn-clear" onclick="clearAllInputs()" id="ui_btn_clear">Clear All</button>
 </div>
 
+<div class="card">
+  <h3 id="ui_exp_companies">Expanded Companies</h3>
+  <textarea id="expandedCompanies" readonly></textarea>
+
+  <h3 id="ui_exp_keywords">Expanded Keywords</h3>
+  <textarea id="expandedKeywords" readonly></textarea>
+</div>
+
+<div class="card">
+  <h3 id="ui_history_title">Recent Searches</h3>
+  <div id="historyList"></div>
+  <button class="btn-clear" onclick="clearHistory()" id="ui_clear_history">Clear History</button>
+</div>
+
 <div class="footer" id="urlFooter"></div>
 
 </div>
@@ -160,102 +184,303 @@ Sony, Mitsubishi | Toshiba"></textarea>
 <script>
 
 const SPLIT_REGEX=/[\r\n,，、。:：・\/\\;；Ø|◊]+/g;
+const MAX_GROUPS=4;
+const MAX_HISTORY=10;
+const LS_KEY="tayaHistory_v34";
+
 let keywordGroups=[];
 let generatedURL="";
 
-/* ====== 多语言修复版 ====== */
-const LANG={
+const LANG = {
   en:{
     company:"Company Names",
-    companyDesc:"Separate with: Enter / , / ， / 、 / ; / |",
     mode:"Mode",
-    modeDesc:"Choose how company filter should apply.",
-    keywordDesc:"Each group = OR ｜ Multiple groups = AND",
-    add:"+ Add Keyword Group",
+    past:"Former only (exclude current)",
+    current:"Current only",
+    both:"Both (Current + Past)",
+    add:"+ Add Keyword Group (AND)",
     generate:"Generate",
     open:"Open",
     copy:"Copy",
-    clear:"Clear All"
+    clear:"Clear All",
+    history:"Recent Searches",
+    clearHistory:"Clear History",
+    confirmClear:"Are you sure you want to clear all inputs?",
+    confirmHistory:"Clear all history?"
   },
   ja:{
     company:"会社名",
-    companyDesc:"改行・, ・、・; ・| で区切ってください",
     mode:"モード",
-    modeDesc:"会社フィルターの適用方法を選択",
-    keywordDesc:"各グループ＝OR ｜ 複数グループ＝AND",
-    add:"+ キーワード追加",
+    past:"元職のみ（現職を除外）",
+    current:"現職のみ",
+    both:"現職＋元職",
+    add:"+ キーワードグループ追加 (AND)",
     generate:"生成",
     open:"開く",
     copy:"コピー",
-    clear:"クリア"
+    clear:"すべてクリア",
+    history:"最近の検索",
+    clearHistory:"履歴を削除",
+    confirmClear:"入力内容をすべてクリアしますか？",
+    confirmHistory:"履歴をすべて削除しますか？"
   },
   zh_cn:{
     company:"公司名称",
-    companyDesc:"可使用 换行 / , / ， / 、 / ; / | 分隔",
     mode:"模式",
-    modeDesc:"选择公司过滤方式",
-    keywordDesc:"每组 = OR ｜ 多组 = AND",
-    add:"+ 添加关键词组",
+    past:"仅过去（排除当前）",
+    current:"仅当前",
+    both:"当前 + 过去",
+    add:"+ 添加关键词组 (AND)",
     generate:"生成",
     open:"打开",
     copy:"复制",
-    clear:"清空"
+    clear:"清空全部",
+    history:"最近搜索",
+    clearHistory:"清空历史",
+    confirmClear:"确定要清空所有输入内容吗？",
+    confirmHistory:"确定要清空历史记录吗？"
+  },
+  zh_tw:{
+    company:"公司名稱",
+    mode:"模式",
+    past:"僅過去（排除當前）",
+    current:"僅當前",
+    both:"當前 + 過去",
+    add:"+ 新增關鍵字群組 (AND)",
+    generate:"產生",
+    open:"開啟",
+    copy:"複製",
+    clear:"全部清除",
+    history:"最近搜尋",
+    clearHistory:"清除歷史",
+    confirmClear:"確定要清空所有輸入內容嗎？",
+    confirmHistory:"確定要清空歷史紀錄嗎？"
+  },
+  mn:{
+    company:"Компанийн нэр",
+    mode:"Горим",
+    past:"Зөвхөн өмнөх",
+    current:"Зөвхөн одоогийн",
+    both:"Одоогийн + Өмнөх",
+    add:"+ Түлхүүр үг нэмэх",
+    generate:"Үүсгэх",
+    open:"Нээх",
+    copy:"Хуулах",
+    clear:"Бүгдийг цэвэрлэх",
+    history:"Сүүлийн хайлтууд",
+    clearHistory:"Түүх устгах",
+    confirmClear:"Бүх оруулсан мэдээллийг устгах уу?",
+    confirmHistory:"Бүх түүхийг устгах уу?"
   }
+guide: `
+<h3>How to Use</h3>
+1. Enter company names (separate by Enter, comma, | etc.)<br><br>
+2. Select filter mode (Current / Former / Both)<br><br>
+3. Add keyword groups<br>
+- Inside group = OR<br>
+- Between groups = AND<br><br>
+4. Click Generate → Open
+`
+  guide: `
+<h3>使い方</h3>
+1. 会社名を入力（改行・カンマ等で区切る）<br><br>
+2. モードを選択<br><br>
+3. キーワードグループ追加<br>
+- グループ内＝OR<br>
+- グループ間＝AND<br><br>
+4. 生成 → 開く
+`
+  guide: `
+<h3>使用说明</h3>
+1. 输入公司名称（可用换行、逗号、| 分隔）<br><br>
+2. 选择过滤模式<br><br>
+3. 添加关键词组<br>
+- 组内 = OR<br>
+- 组间 = AND<br><br>
+4. 点击生成 → 打开
+`
+  
 };
+  
+function uniq(arr){return [...new Set(arr.map(x=>x.trim()).filter(Boolean))];}
 
-function applyLanguage(){
-  const lang=document.getElementById("lang").value;
-  const t=LANG[lang]||LANG.en;
-
-  document.getElementById("ui_company_label").innerText=t.company;
-  document.getElementById("ui_company_desc").innerText=t.companyDesc;
-  document.getElementById("ui_mode_label").innerText=t.mode;
-  document.getElementById("ui_mode_desc").innerText=t.modeDesc;
-  document.getElementById("ui_keyword_desc").innerText=t.keywordDesc;
-  document.getElementById("ui_add_group").innerText=t.add;
-  document.getElementById("ui_btn_generate").innerText=t.generate;
-  document.getElementById("ui_btn_open").innerText=t.open;
-  document.getElementById("ui_btn_copy").innerText=t.copy;
-  document.getElementById("ui_btn_clear").innerText=t.clear;
+function encForKeywords(raw){
+  const once = encodeURIComponent(raw)
+    .replace(/\(/g,"%28")
+    .replace(/\)/g,"%29");
+  return once.replace(/%/g,"%25");
 }
 
-/* ====== 原逻辑 ====== */
+function encForCompany(raw){
+  const once = encodeURIComponent(raw);
+  return once.replace(/%/g,"%25");
+}
 
-function uniq(arr){return [...new Set(arr.map(x=>x.trim()).filter(Boolean))];}
+function formatGroup(raw){
+  const list=uniq((raw||"").split(SPLIT_REGEX));
+  if(!list.length) return "";
+  return list.map(k=>{
+    if(/[\u4e00-\u9fff]/.test(k)) return `“${k}”`;
+    return `"${k}"`;
+  }).join(" OR ");
+}
+
+function buildFilters(names,mode){
+  function values(list,type){
+    return list.map(n=>`(text%3A${encForCompany(n)}%2CselectionType%3A${type})`).join("%2C");
+  }
+  if(mode==="PAST")
+    return `(type%3APAST_COMPANY%2Cvalues%3AList(${values(names,"INCLUDED")}))%2C(type%3ACURRENT_COMPANY%2Cvalues%3AList(${values(names,"EXCLUDED")}))`;
+  if(mode==="CURRENT")
+    return `(type%3ACURRENT_COMPANY%2Cvalues%3AList(${values(names,"INCLUDED")}))`;
+  return `(type%3APAST_COMPANY%2Cvalues%3AList(${values(names,"INCLUDED")}))%2C(type%3ACURRENT_COMPANY%2Cvalues%3AList(${values(names,"INCLUDED")}))`;
+}
 
 function generate(){
   const companies=document.getElementById("companies").value;
+  const mode=document.getElementById("mode").value;
   const names=uniq((companies||"").split(SPLIT_REGEX));
-  generatedURL="Generated with "+names.length+" companies";
+  document.getElementById("expandedCompanies").value=names.join("\n");
+
+  const filters=buildFilters(names,mode);
+  const groupsFormatted=keywordGroups.map(id=>formatGroup(document.getElementById(id).value)).filter(Boolean);
+  const keywordString=groupsFormatted.map(g=>`(${g})`).join(" AND ");
+  document.getElementById("expandedKeywords").value=keywordString;
+
+  const keywordBlock=keywordString?`%2Ckeywords%3A${encForKeywords(keywordString)}`:"";
+  const query=`(spellCorrectionEnabled%3Atrue%2CrecentSearchParam%3A(doLogHistory%3Atrue)%2Cfilters%3AList(${filters})${keywordBlock})`;
+  generatedURL=`https://www.linkedin.com/sales/search/people?query=${query}&viewAllFilters=true`;
   document.getElementById("urlFooter").innerText=generatedURL;
+  saveHistory();
 }
 
 function copyURL(){if(generatedURL)navigator.clipboard.writeText(generatedURL);}
 function openURL(){if(generatedURL)window.open(generatedURL,"_blank");}
 
 function addKeywordGroup(value=""){
+  if(keywordGroups.length>=MAX_GROUPS)return;
   const id="kw"+Date.now();
   keywordGroups.push(id);
   const div=document.createElement("div");
   div.className="group";
-  div.innerHTML=`<textarea id="${id}" placeholder="CEO, Director, Head of R&D">${value}</textarea>`;
+  div.innerHTML=`<label><b>Keyword Group (${keywordGroups.length})</b></label>
+  <span class="remove-btn" onclick="removeGroup('${id}')">Remove</span>
+  <textarea id="${id}">${value}</textarea>`;
   document.getElementById("keywordContainer").appendChild(div);
 }
 
+function removeGroup(id){
+  keywordGroups=keywordGroups.filter(x=>x!==id);
+  document.getElementById(id).parentElement.remove();
+}
+
 function clearAllInputs(){
+  const msgs={
+    en:"Are you sure you want to clear all inputs?",
+    ja:"入力内容をすべてクリアしますか？",
+    zh:"确定要清空所有输入内容吗？"
+  };
+  const lang=document.getElementById("lang").value;
+  if(!confirm(msgs[lang]||msgs.en))return;
+
   document.getElementById("companies").value="";
+  document.getElementById("mode").value="PAST";
   document.getElementById("keywordContainer").innerHTML="";
   keywordGroups=[];
   addKeywordGroup("");
+  document.getElementById("expandedCompanies").value="";
+  document.getElementById("expandedKeywords").value="";
   document.getElementById("urlFooter").innerText="";
   generatedURL="";
 }
 
+function saveHistory(){
+  if(!generatedURL)return;
+  const history=JSON.parse(localStorage.getItem(LS_KEY)||"[]");
+  history.unshift({
+    companies:document.getElementById("companies").value,
+    mode:document.getElementById("mode").value,
+    keywords:keywordGroups.map(id=>document.getElementById(id).value),
+    url:generatedURL,
+    time:new Date().toLocaleString()
+  });
+  localStorage.setItem(LS_KEY,JSON.stringify(history.slice(0,MAX_HISTORY)));
+  renderHistory();
+}
+
+function renderHistory(){
+  const history=JSON.parse(localStorage.getItem(LS_KEY)||"[]");
+  const container=document.getElementById("historyList");
+  container.innerHTML="";
+  history.forEach((item,index)=>{
+    const div=document.createElement("div");
+    div.className="history-item";
+    div.innerHTML=`<b>${item.time}</b><br>${item.companies}<br>
+    <button onclick="loadHistory(${index})">Load</button>
+    <button onclick="deleteHistory(${index})">Delete</button>`;
+    container.appendChild(div);
+  });
+}
+
+function loadHistory(index){
+  const history=JSON.parse(localStorage.getItem(LS_KEY)||"[]");
+  const item=history[index];
+  if(!item)return;
+  document.getElementById("companies").value=item.companies;
+  document.getElementById("mode").value=item.mode;
+  document.getElementById("keywordContainer").innerHTML="";
+  keywordGroups=[];
+  item.keywords.forEach(k=>addKeywordGroup(k));
+  generatedURL=item.url;
+  document.getElementById("urlFooter").innerText=generatedURL;
+}
+
+function deleteHistory(index){
+  const history=JSON.parse(localStorage.getItem(LS_KEY)||"[]");
+  history.splice(index,1);
+  localStorage.setItem(LS_KEY,JSON.stringify(history));
+  renderHistory();
+}
+
+function clearHistory(){
+  const msgs={
+    en:"Clear all history?",
+    ja:"履歴をすべて削除しますか？",
+    zh:"确定要清空历史记录吗？"
+  };
+  const lang=document.getElementById("lang").value;
+  if(!confirm(msgs[lang]||msgs.en))return;
+  localStorage.removeItem(LS_KEY);
+  renderHistory();
+}
+
 function toggleTheme(){document.body.classList.toggle("light");}
 
+function applyLanguage(){
+  const lang=document.getElementById("lang").value;
+  const t=LANG[lang]||LANG.en;
+
+  document.getElementById("ui_company_label").innerText=t.company;
+  document.getElementById("ui_mode_label").innerText=t.mode;
+  document.getElementById("ui_mode_past").innerText=t.past;
+  document.getElementById("ui_mode_current").innerText=t.current;
+  document.getElementById("ui_mode_both").innerText=t.both;
+  document.getElementById("ui_add_group").innerText=t.add;
+  document.getElementById("ui_btn_generate").innerText=t.generate;
+  document.getElementById("ui_btn_open").innerText=t.open;
+  document.getElementById("ui_btn_copy").innerText=t.copy;
+  document.getElementById("ui_btn_clear").innerText=t.clear;
+  document.getElementById("ui_history_title").innerText=t.history;
+  document.getElementById("ui_clear_history").innerText=t.clearHistory;
+  document.getElementById("sidebarGuide").innerHTML=t.guide;
+}
+  
 addKeywordGroup("");
+renderHistory();
 applyLanguage();
 
 </script>
 </body>
 </html>
+  </div>
+</div>
