@@ -8,11 +8,10 @@
 
 <style>
 :root{
-  --bg:#0b1e2d;      
-  --card:#112b3c;      
-  --text:#f1f5f9;      
-  --border:#1f3a4d;    
-
+  --bg:#0b1e2d;
+  --card:#112b3c;
+  --text:#f1f5f9;
+  --border:#1f3a4d;
   --green:#1bb76e;
   --blue:#3b82f6;
   --red:#e53935;
@@ -45,6 +44,7 @@ textarea,select{
   border-radius:10px;
   padding:10px;
   margin-top:6px;
+  box-sizing:border-box;
 }
 button{
   padding:6px 12px;
@@ -57,84 +57,75 @@ button{
 .btn-open{background:var(--blue);color:white;border:none;}
 .btn-copy{background:transparent;color:var(--text);}
 .btn-clear{background:var(--red);color:white;border:none;}
-.group{
-  margin-bottom:15px;
-  position:relative;
-}
-.remove-btn{
-  position:absolute;
-  right:0;
-  top:0;
-  font-size:12px;
-  cursor:pointer;
-  opacity:.65;
-}
-.footer{
-  margin-top:30px;
-  font-size:11px;
-  opacity:.35;
-  word-break:break-all;
-}
-.history-item{
-  font-size:12px;
-  border:1px solid var(--border);
-  padding:8px;
-  border-radius:8px;
-  margin-bottom:8px;
-}
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-}
-.controls{
-  display:flex;
-  gap:10px;
-  align-items:center;
-}
+.group{margin-bottom:15px;position:relative;}
+.remove-btn{position:absolute;right:0;top:0;font-size:12px;cursor:pointer;opacity:.65;}
+.footer{margin-top:30px;font-size:11px;opacity:.35;word-break:break-all;}
+.history-item{font-size:12px;border:1px solid var(--border);padding:8px;border-radius:8px;margin-bottom:8px;}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.controls{display:flex;gap:10px;align-items:center;}
 .toggle{cursor:pointer;opacity:.7;}
 hr{margin:18px 0;opacity:.2}
 
-.layout{
+.geo-panel{
+  max-height:360px;
+  overflow:auto;
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:12px;
+  margin-top:8px;
+  background:var(--bg);
+}
+.geo-actions{
   display:flex;
-  gap:30px;
+  gap:8px;
+  margin-top:10px;
+  flex-wrap:wrap;
 }
-
-.sidebar{
-  width:260px;
-  font-size:13px;
-  opacity:.8;
-  line-height:1.6;
+.geo-actions button{
+  background:transparent;
+  color:var(--text);
 }
-
-.sidebar h3{
-  margin-top:0;
+.geo-node{margin:4px 0;}
+.geo-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  line-height:1.4;
 }
-
-.container{
-  flex:1;
-  max-width:1000px;
+.geo-row input[type="checkbox"]{
+  width:auto;
+  margin:0;
 }
+.geo-children{
+  margin-left:22px;
+  padding-left:8px;
+  border-left:1px dashed var(--border);
+}
+.geo-toggle{
+  cursor:pointer;
+  width:14px;
+  display:inline-block;
+  text-align:center;
+  opacity:.75;
+  user-select:none;
+}
+.geo-toggle.empty{visibility:hidden;}
+.summary-box{margin-top:10px;font-size:12px;opacity:.85;white-space:pre-wrap;}
 </style>
 </head>
-
 <body class="light">
-  
-<div class="layout">
-  <div class="sidebar" id="sidebarGuide"></div>
-  <div class="container">
+<div class="container">
 
 <div class="topbar">
-  <h2 id="ui_title">Taya Navi v1.1</h2>
+  <h2 id="ui_title">Taya Navi v1.2</h2>
   <div class="controls">
     <select id="lang" onchange="applyLanguage()">
-  <option value="en" selected>English</option>
-  <option value="ja">日本語</option>
-  <option value="zh_cn">中文 (简体)</option>
-  <option value="zh_tw">中文 (繁體)</option>
-  <option value="mn">Монгол</option>
-</select>
+      <option value="en" selected>English</option>
+      <option value="ja">日本語</option>
+      <option value="zh_cn">中文 (简体)</option>
+      <option value="zh_tw">中文 (繁體)</option>
+      <option value="mn">Монгол</option>
+    </select>
     <div class="toggle" onclick="toggleTheme()">🌙 / ☀</div>
   </div>
 </div>
@@ -149,6 +140,17 @@ hr{margin:18px 0;opacity:.2}
     <option value="CURRENT" id="ui_mode_current">Current only</option>
     <option value="BOTH" id="ui_mode_both">Both (Current + Past)</option>
   </select>
+
+  <hr>
+
+  <label><b id="ui_geo_label">Geography</b></label>
+  <div class="geo-panel" id="geoTree"></div>
+  <div class="geo-actions">
+    <button type="button" onclick="expandAllGeo()" id="ui_geo_expand">Expand All</button>
+    <button type="button" onclick="collapseAllGeo()" id="ui_geo_collapse">Collapse All</button>
+    <button type="button" onclick="clearGeo()" id="ui_geo_clear">Clear Geography</button>
+  </div>
+  <div class="summary-box" id="geoSummary"></div>
 
   <hr>
 
@@ -169,6 +171,9 @@ hr{margin:18px 0;opacity:.2}
 
   <h3 id="ui_exp_keywords">Expanded Keywords</h3>
   <textarea id="expandedKeywords" readonly></textarea>
+
+  <h3 id="ui_exp_geography">Expanded Geography</h3>
+  <textarea id="expandedGeography" readonly></textarea>
 </div>
 
 <div class="card">
@@ -182,19 +187,82 @@ hr{margin:18px 0;opacity:.2}
 </div>
 
 <script>
-
-const SPLIT_REGEX=/[\r\n,，、。:：・\/\\;；Ø|◊]+/g;
+const SPLIT_REGEX=/[\r\n,，、。:：\/\\;；Ø|◊]+/g;
 const MAX_GROUPS=4;
 const MAX_HISTORY=10;
-const LS_KEY="tayaHistory_v34";
+const LS_KEY="tayaHistory_v35";
 
 let keywordGroups=[];
 let generatedURL="";
+
+const GEO_TREE = [
+  {
+    label: "Asia",
+    children: [
+      { label: "Middle East" },
+      {
+        label: "North Asia",
+        children: [
+          { label: "China (Hong Kong, SAR)" },
+          { label: "China (Mainland China)" },
+          { label: "China (Taiwan)" },
+          { label: "Japan" },
+          { label: "South Korea" }
+        ]
+      },
+      {
+        label: "South Asia",
+        children: [
+          { label: "India" },
+          { label: "Pakistan" }
+        ]
+      },
+      {
+        label: "South East Asia",
+        children: [
+          { label: "Indonesia" },
+          { label: "Malaysia" },
+          { label: "Philippines" },
+          { label: "Singapore" },
+          { label: "Thailand" },
+          { label: "Vietnam" }
+        ]
+      }
+    ]
+  },
+  {
+    label: "North America",
+    children: [
+      { label: "United States" },
+      { label: "Canada" },
+      { label: "Mexico" }
+    ]
+  },
+  {
+    label: "Western Europe",
+    children: [
+      { label: "Benelux" },
+      { label: "Great Britain" },
+      { label: "Iberia" },
+      { label: "Scandinavia" },
+      { label: "Austria" },
+      { label: "France" },
+      { label: "Germany" },
+      { label: "Greece" },
+      { label: "Ireland" },
+      { label: "Italy" },
+      { label: "Malta" },
+      { label: "Switzerland" }
+    ]
+  }
+];
 
 const LANG = {
   en:{
     company:"Company Names",
     mode:"Mode",
+    geography:"Geography",
+    expandedGeography:"Expanded Geography",
     past:"Former only (exclude current)",
     current:"Current only",
     both:"Both (Current + Past)",
@@ -205,12 +273,19 @@ const LANG = {
     clear:"Clear All",
     history:"Recent Searches",
     clearHistory:"Clear History",
+    expandAll:"Expand All",
+    collapseAll:"Collapse All",
+    clearGeography:"Clear Geography",
+    selectedGeo:"Selected Geography",
+    none:"None",
     confirmClear:"Are you sure you want to clear all inputs?",
     confirmHistory:"Clear all history?"
   },
   ja:{
     company:"会社名",
     mode:"モード",
+    geography:"地域",
+    expandedGeography:"展開後の地域",
     past:"元職のみ（現職を除外）",
     current:"現職のみ",
     both:"現職＋元職",
@@ -221,12 +296,19 @@ const LANG = {
     clear:"すべてクリア",
     history:"最近の検索",
     clearHistory:"履歴を削除",
+    expandAll:"すべて展開",
+    collapseAll:"すべて折りたたむ",
+    clearGeography:"地域をクリア",
+    selectedGeo:"選択中の地域",
+    none:"なし",
     confirmClear:"入力内容をすべてクリアしますか？",
     confirmHistory:"履歴をすべて削除しますか？"
   },
   zh_cn:{
     company:"公司名称",
     mode:"模式",
+    geography:"Geography",
+    expandedGeography:"展开后的 Geography",
     past:"仅过去（排除当前）",
     current:"仅当前",
     both:"当前 + 过去",
@@ -237,12 +319,19 @@ const LANG = {
     clear:"清空全部",
     history:"最近搜索",
     clearHistory:"清空历史",
+    expandAll:"全部展开",
+    collapseAll:"全部收起",
+    clearGeography:"清空 Geography",
+    selectedGeo:"已选择 Geography",
+    none:"无",
     confirmClear:"确定要清空所有输入内容吗？",
     confirmHistory:"确定要清空历史记录吗？"
   },
   zh_tw:{
     company:"公司名稱",
     mode:"模式",
+    geography:"Geography",
+    expandedGeography:"展開後的 Geography",
     past:"僅過去（排除當前）",
     current:"僅當前",
     both:"當前 + 過去",
@@ -253,12 +342,19 @@ const LANG = {
     clear:"全部清除",
     history:"最近搜尋",
     clearHistory:"清除歷史",
+    expandAll:"全部展開",
+    collapseAll:"全部收起",
+    clearGeography:"清空 Geography",
+    selectedGeo:"已選擇 Geography",
+    none:"無",
     confirmClear:"確定要清空所有輸入內容嗎？",
     confirmHistory:"確定要清空歷史紀錄嗎？"
   },
   mn:{
     company:"Компанийн нэр",
     mode:"Горим",
+    geography:"Geography",
+    expandedGeography:"Сонгосон Geography",
     past:"Зөвхөн өмнөх",
     current:"Зөвхөн одоогийн",
     both:"Одоогийн + Өмнөх",
@@ -269,45 +365,20 @@ const LANG = {
     clear:"Бүгдийг цэвэрлэх",
     history:"Сүүлийн хайлтууд",
     clearHistory:"Түүх устгах",
+    expandAll:"Бүгдийг дэлгэх",
+    collapseAll:"Бүгдийг хураах",
+    clearGeography:"Geography цэвэрлэх",
+    selectedGeo:"Сонгосон Geography",
+    none:"Байхгүй",
     confirmClear:"Бүх оруулсан мэдээллийг устгах уу?",
     confirmHistory:"Бүх түүхийг устгах уу?"
   }
-guide: `
-<h3>How to Use</h3>
-1. Enter company names (separate by Enter, comma, | etc.)<br><br>
-2. Select filter mode (Current / Former / Both)<br><br>
-3. Add keyword groups<br>
-- Inside group = OR<br>
-- Between groups = AND<br><br>
-4. Click Generate → Open
-`
-  guide: `
-<h3>使い方</h3>
-1. 会社名を入力（改行・カンマ等で区切る）<br><br>
-2. モードを選択<br><br>
-3. キーワードグループ追加<br>
-- グループ内＝OR<br>
-- グループ間＝AND<br><br>
-4. 生成 → 開く
-`
-  guide: `
-<h3>使用说明</h3>
-1. 输入公司名称（可用换行、逗号、| 分隔）<br><br>
-2. 选择过滤模式<br><br>
-3. 添加关键词组<br>
-- 组内 = OR<br>
-- 组间 = AND<br><br>
-4. 点击生成 → 打开
-`
-  
 };
-  
+
 function uniq(arr){return [...new Set(arr.map(x=>x.trim()).filter(Boolean))];}
 
 function encForKeywords(raw){
-  const once = encodeURIComponent(raw)
-    .replace(/\(/g,"%28")
-    .replace(/\)/g,"%29");
+  const once = encodeURIComponent(raw).replace(/\(/g,"%28").replace(/\)/g,"%29");
   return once.replace(/%/g,"%25");
 }
 
@@ -319,21 +390,37 @@ function encForCompany(raw){
 function formatGroup(raw){
   const list=uniq((raw||"").split(SPLIT_REGEX));
   if(!list.length) return "";
-  return list.map(k=>{
-    if(/[\u4e00-\u9fff]/.test(k)) return `“${k}”`;
-    return `"${k}"`;
-  }).join(" OR ");
+  return list.map(k=>/[\u4e00-\u9fff]/.test(k) ? `“${k}”` : `"${k}"`).join(" OR ");
 }
 
 function buildFilters(names,mode){
+  const filterParts=[];
+
   function values(list,type){
     return list.map(n=>`(text%3A${encForCompany(n)}%2CselectionType%3A${type})`).join("%2C");
   }
-  if(mode==="PAST")
-    return `(type%3APAST_COMPANY%2Cvalues%3AList(${values(names,"INCLUDED")}))%2C(type%3ACURRENT_COMPANY%2Cvalues%3AList(${values(names,"EXCLUDED")}))`;
-  if(mode==="CURRENT")
-    return `(type%3ACURRENT_COMPANY%2Cvalues%3AList(${values(names,"INCLUDED")}))`;
-  return `(type%3APAST_COMPANY%2Cvalues%3AList(${values(names,"INCLUDED")}))%2C(type%3ACURRENT_COMPANY%2Cvalues%3AList(${values(names,"INCLUDED")}))`;
+
+  if(names.length){
+    if(mode==="PAST"){
+      filterParts.push(`(type%3APAST_COMPANY%2Cvalues%3AList(${values(names,"INCLUDED")}))`);
+      filterParts.push(`(type%3ACURRENT_COMPANY%2Cvalues%3AList(${values(names,"EXCLUDED")}))`);
+    }else if(mode==="CURRENT"){
+      filterParts.push(`(type%3ACURRENT_COMPANY%2Cvalues%3AList(${values(names,"INCLUDED")}))`);
+    }else{
+      filterParts.push(`(type%3APAST_COMPANY%2Cvalues%3AList(${values(names,"INCLUDED")}))`);
+      filterParts.push(`(type%3ACURRENT_COMPANY%2Cvalues%3AList(${values(names,"INCLUDED")}))`);
+    }
+  }
+
+  const geoSelections=getSelectedLeafGeographies();
+  if(geoSelections.length){
+    const geoValues=geoSelections
+      .map(name=>`(text%3A${encForCompany(name)}%2CselectionType%3AINCLUDED)`)
+      .join("%2C");
+    filterParts.push(`(type%3AGEOGRAPHY%2Cvalues%3AList(${geoValues}))`);
+  }
+
+  return filterParts.join("%2C");
 }
 
 function generate(){
@@ -342,11 +429,14 @@ function generate(){
   const names=uniq((companies||"").split(SPLIT_REGEX));
   document.getElementById("expandedCompanies").value=names.join("\n");
 
-  const filters=buildFilters(names,mode);
   const groupsFormatted=keywordGroups.map(id=>formatGroup(document.getElementById(id).value)).filter(Boolean);
   const keywordString=groupsFormatted.map(g=>`(${g})`).join(" AND ");
   document.getElementById("expandedKeywords").value=keywordString;
 
+  const selectedGeo=getSelectedLeafGeographies();
+  document.getElementById("expandedGeography").value=selectedGeo.join("\n");
+
+  const filters=buildFilters(names,mode);
   const keywordBlock=keywordString?`%2Ckeywords%3A${encForKeywords(keywordString)}`:"";
   const query=`(spellCorrectionEnabled%3Atrue%2CrecentSearchParam%3A(doLogHistory%3Atrue)%2Cfilters%3AList(${filters})${keywordBlock})`;
   generatedURL=`https://www.linkedin.com/sales/search/people?query=${query}&viewAllFilters=true`;
@@ -359,7 +449,7 @@ function openURL(){if(generatedURL)window.open(generatedURL,"_blank");}
 
 function addKeywordGroup(value=""){
   if(keywordGroups.length>=MAX_GROUPS)return;
-  const id="kw"+Date.now();
+  const id="kw"+Date.now()+Math.floor(Math.random()*1000);
   keywordGroups.push(id);
   const div=document.createElement("div");
   div.className="group";
@@ -375,13 +465,9 @@ function removeGroup(id){
 }
 
 function clearAllInputs(){
-  const msgs={
-    en:"Are you sure you want to clear all inputs?",
-    ja:"入力内容をすべてクリアしますか？",
-    zh:"确定要清空所有输入内容吗？"
-  };
   const lang=document.getElementById("lang").value;
-  if(!confirm(msgs[lang]||msgs.en))return;
+  const t=LANG[lang]||LANG.en;
+  if(!confirm(t.confirmClear))return;
 
   document.getElementById("companies").value="";
   document.getElementById("mode").value="PAST";
@@ -390,8 +476,10 @@ function clearAllInputs(){
   addKeywordGroup("");
   document.getElementById("expandedCompanies").value="";
   document.getElementById("expandedKeywords").value="";
+  document.getElementById("expandedGeography").value="";
   document.getElementById("urlFooter").innerText="";
   generatedURL="";
+  clearGeo(false);
 }
 
 function saveHistory(){
@@ -401,6 +489,7 @@ function saveHistory(){
     companies:document.getElementById("companies").value,
     mode:document.getElementById("mode").value,
     keywords:keywordGroups.map(id=>document.getElementById(id).value),
+    geo:getSelectedGeographies(),
     url:generatedURL,
     time:new Date().toLocaleString()
   });
@@ -415,7 +504,8 @@ function renderHistory(){
   history.forEach((item,index)=>{
     const div=document.createElement("div");
     div.className="history-item";
-    div.innerHTML=`<b>${item.time}</b><br>${item.companies}<br>
+    const geoText=(item.geo||[]).join(", ");
+    div.innerHTML=`<b>${item.time}</b><br>${item.companies||"(no companies)"}<br>${geoText || "(no geography)"}<br>
     <button onclick="loadHistory(${index})">Load</button>
     <button onclick="deleteHistory(${index})">Delete</button>`;
     container.appendChild(div);
@@ -430,9 +520,11 @@ function loadHistory(index){
   document.getElementById("mode").value=item.mode;
   document.getElementById("keywordContainer").innerHTML="";
   keywordGroups=[];
-  item.keywords.forEach(k=>addKeywordGroup(k));
+  (item.keywords||[]).forEach(k=>addKeywordGroup(k));
+  setSelectedGeographies(item.geo||[]);
   generatedURL=item.url;
   document.getElementById("urlFooter").innerText=generatedURL;
+  document.getElementById("expandedGeography").value=(item.geo||[]).join("\n");
 }
 
 function deleteHistory(index){
@@ -443,18 +535,142 @@ function deleteHistory(index){
 }
 
 function clearHistory(){
-  const msgs={
-    en:"Clear all history?",
-    ja:"履歴をすべて削除しますか？",
-    zh:"确定要清空历史记录吗？"
-  };
   const lang=document.getElementById("lang").value;
-  if(!confirm(msgs[lang]||msgs.en))return;
+  const t=LANG[lang]||LANG.en;
+  if(!confirm(t.confirmHistory))return;
   localStorage.removeItem(LS_KEY);
   renderHistory();
 }
 
 function toggleTheme(){document.body.classList.toggle("light");}
+
+function createGeoNode(node, path=[]){
+  const currentPath=[...path, node.label];
+  const hasChildren=Array.isArray(node.children) && node.children.length>0;
+
+  const wrapper=document.createElement("div");
+  wrapper.className="geo-node";
+
+  const row=document.createElement("div");
+  row.className="geo-row";
+
+  const toggle=document.createElement("span");
+  toggle.className=`geo-toggle${hasChildren ? "" : " empty"}`;
+  toggle.textContent=hasChildren ? "▾" : "•";
+  row.appendChild(toggle);
+
+  const checkbox=document.createElement("input");
+  checkbox.type="checkbox";
+  checkbox.dataset.label=node.label;
+  checkbox.dataset.path=currentPath.join(" > ");
+  checkbox.dataset.hasChildren=hasChildren ? "1" : "0";
+  row.appendChild(checkbox);
+
+  const label=document.createElement("span");
+  label.textContent=node.label;
+  row.appendChild(label);
+  wrapper.appendChild(row);
+
+  let childContainer=null;
+  if(hasChildren){
+    childContainer=document.createElement("div");
+    childContainer.className="geo-children";
+    node.children.forEach(child=>childContainer.appendChild(createGeoNode(child, currentPath)));
+    wrapper.appendChild(childContainer);
+
+    toggle.onclick=()=>{
+      const collapsed=childContainer.style.display==="none";
+      childContainer.style.display=collapsed ? "block" : "none";
+      toggle.textContent=collapsed ? "▾" : "▸";
+    };
+
+    checkbox.addEventListener("change",()=>{
+      childContainer.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+        cb.checked=checkbox.checked;
+        cb.indeterminate=false;
+      });
+      updateGeoParents();
+      updateGeoSummary();
+    });
+  }else{
+    checkbox.addEventListener("change",()=>{
+      updateGeoParents();
+      updateGeoSummary();
+    });
+  }
+
+  return wrapper;
+}
+
+function renderGeoTree(){
+  const container=document.getElementById("geoTree");
+  container.innerHTML="";
+  GEO_TREE.forEach(node=>container.appendChild(createGeoNode(node)));
+  updateGeoSummary();
+}
+
+function updateGeoParents(){
+  const nodes=[...document.querySelectorAll('#geoTree .geo-node')].reverse();
+  nodes.forEach(node=>{
+    const parentCb=node.querySelector(':scope > .geo-row input[type="checkbox"]');
+    const childCbs=[...node.querySelectorAll(':scope > .geo-children input[type="checkbox"]')];
+    if(!childCbs.length) return;
+    const allChecked=childCbs.every(cb=>cb.checked);
+    const someChecked=childCbs.some(cb=>cb.checked || cb.indeterminate);
+    parentCb.checked=allChecked;
+    parentCb.indeterminate=!allChecked && someChecked;
+  });
+}
+
+function getSelectedGeographies(){
+  return [...document.querySelectorAll('#geoTree input[type="checkbox"]')]
+    .filter(cb=>cb.checked)
+    .map(cb=>cb.dataset.label);
+}
+
+function getSelectedLeafGeographies(){
+  return [...document.querySelectorAll('#geoTree input[type="checkbox"][data-has-children="0"]')]
+    .filter(cb=>cb.checked)
+    .map(cb=>cb.dataset.label);
+}
+
+function setSelectedGeographies(labels){
+  document.querySelectorAll('#geoTree input[type="checkbox"]').forEach(cb=>{
+    cb.checked=labels.includes(cb.dataset.label);
+    cb.indeterminate=false;
+  });
+  updateGeoParents();
+  updateGeoSummary();
+}
+
+function clearGeo(update=true){
+  document.querySelectorAll('#geoTree input[type="checkbox"]').forEach(cb=>{
+    cb.checked=false;
+    cb.indeterminate=false;
+  });
+  if(update) updateGeoSummary();
+}
+
+function expandAllGeo(){
+  document.querySelectorAll('#geoTree .geo-children').forEach(el=>el.style.display='block');
+  document.querySelectorAll('#geoTree .geo-toggle').forEach(el=>{
+    if(!el.classList.contains('empty')) el.textContent='▾';
+  });
+}
+
+function collapseAllGeo(){
+  document.querySelectorAll('#geoTree .geo-children').forEach(el=>el.style.display='none');
+  document.querySelectorAll('#geoTree .geo-toggle').forEach(el=>{
+    if(!el.classList.contains('empty')) el.textContent='▸';
+  });
+}
+
+function updateGeoSummary(){
+  const lang=document.getElementById("lang").value;
+  const t=LANG[lang]||LANG.en;
+  const selected=getSelectedLeafGeographies();
+  document.getElementById("geoSummary").textContent=`${t.selectedGeo}: ${selected.length ? selected.join(', ') : t.none}`;
+}
 
 function applyLanguage(){
   const lang=document.getElementById("lang").value;
@@ -462,6 +678,8 @@ function applyLanguage(){
 
   document.getElementById("ui_company_label").innerText=t.company;
   document.getElementById("ui_mode_label").innerText=t.mode;
+  document.getElementById("ui_geo_label").innerText=t.geography;
+  document.getElementById("ui_exp_geography").innerText=t.expandedGeography;
   document.getElementById("ui_mode_past").innerText=t.past;
   document.getElementById("ui_mode_current").innerText=t.current;
   document.getElementById("ui_mode_both").innerText=t.both;
@@ -472,15 +690,16 @@ function applyLanguage(){
   document.getElementById("ui_btn_clear").innerText=t.clear;
   document.getElementById("ui_history_title").innerText=t.history;
   document.getElementById("ui_clear_history").innerText=t.clearHistory;
-  document.getElementById("sidebarGuide").innerHTML=t.guide;
+  document.getElementById("ui_geo_expand").innerText=t.expandAll;
+  document.getElementById("ui_geo_collapse").innerText=t.collapseAll;
+  document.getElementById("ui_geo_clear").innerText=t.clearGeography;
+  updateGeoSummary();
 }
-  
+
 addKeywordGroup("");
+renderGeoTree();
 renderHistory();
 applyLanguage();
-
 </script>
 </body>
 </html>
-  </div>
-</div>
