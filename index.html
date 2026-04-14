@@ -195,6 +195,18 @@ const LS_KEY="tayaHistory_v35";
 let keywordGroups=[];
 let generatedURL="";
 
+const GEO_ID_MAP = {
+  "Japan": { id: 101355337, text: "Japan" },
+  "United States": { id: 103644278, text: "United States" },
+  "China (Mainland China)": { id: 102890883, text: "China" },
+  "China (Hong Kong, SAR)": { id: 103291313, text: "Hong Kong SAR" },
+  "China (Taiwan)": { id: 104187078, text: "Taiwan" },
+  "Singapore": { id: 102454443, text: "Singapore" },
+  "South Korea": { id: 105149562, text: "South Korea" },
+  "India": { id: 102713980, text: "India" },
+  "Great Britain": { id: 101165590, text: "United Kingdom" }
+};
+
 const GEO_TREE = [
   {
     label: "Asia",
@@ -414,10 +426,15 @@ function buildFilters(names,mode){
 
   const geoSelections=getSelectedLeafGeographies();
   if(geoSelections.length){
-    const geoValues=geoSelections
-      .map(name=>`(text%3A${encForCompany(name)}%2CselectionType%3AINCLUDED)`)
+    const regionValues=geoSelections
+      .map(name => GEO_ID_MAP[name])
+      .filter(Boolean)
+      .map(region => `(id%3A${region.id}%2Ctext%3A${encForCompany(region.text)}%2CselectionType%3AINCLUDED)`)
       .join("%2C");
-    filterParts.push(`(type%3AGEOGRAPHY%2Cvalues%3AList(${geoValues}))`);
+
+    if(regionValues){
+      filterParts.push(`(type%3AREGION%2Cvalues%3AList(${regionValues}))`);
+    }
   }
 
   return filterParts.join("%2C");
@@ -489,7 +506,7 @@ function saveHistory(){
     companies:document.getElementById("companies").value,
     mode:document.getElementById("mode").value,
     keywords:keywordGroups.map(id=>document.getElementById(id).value),
-    geo:getSelectedGeographies(),
+    geo:getSelectedLeafGeographies(),
     url:generatedURL,
     time:new Date().toLocaleString()
   });
