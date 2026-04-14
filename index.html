@@ -111,6 +111,46 @@ hr{margin:18px 0;opacity:.2}
 }
 .geo-toggle.empty{visibility:hidden;}
 .summary-box{margin-top:10px;font-size:12px;opacity:.85;white-space:pre-wrap;}
+.geo-search-wrap{position:relative;margin-top:8px;}
+.geo-search-input{
+  width:100%;
+  background:var(--bg);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:10px;
+  box-sizing:border-box;
+}
+.geo-suggestions{
+  position:absolute;
+  left:0;
+  right:0;
+  top:100%;
+  margin-top:4px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:10px;
+  max-height:220px;
+  overflow:auto;
+  z-index:20;
+  display:none;
+  box-shadow:0 8px 24px rgba(0,0,0,.12);
+}
+.geo-suggestion-item{
+  padding:10px 12px;
+  cursor:pointer;
+  font-size:13px;
+  border-bottom:1px solid var(--border);
+}
+.geo-suggestion-item:last-child{border-bottom:none;}
+.geo-suggestion-item:hover{background:rgba(59,130,246,.08);}
+.geo-muted{opacity:.65;font-size:12px;}
+.geo-highlight{
+  background:rgba(255,230,120,.45);
+  color:inherit;
+  padding:0 2px;
+  border-radius:4px;
+}
 </style>
 </head>
 <body class="light">
@@ -144,6 +184,10 @@ hr{margin:18px 0;opacity:.2}
   <hr>
 
   <label><b id="ui_geo_label">Geography</b></label>
+  <div class="geo-search-wrap">
+    <input id="geoSearch" class="geo-search-input" type="text" placeholder="Search geography..." oninput="handleGeoSearch()" autocomplete="off">
+    <div id="geoSuggestions" class="geo-suggestions"></div>
+  </div>
   <div class="geo-panel" id="geoTree"></div>
   <div class="geo-actions">
     <button type="button" onclick="expandAllGeo()" id="ui_geo_expand">Expand All</button>
@@ -269,6 +313,8 @@ const GEO_TREE = [
   }
 ];
 
+const GEO_SEARCH_INDEX = [];
+
 const LANG = {
   en:{
     company:"Company Names",
@@ -286,6 +332,7 @@ const LANG = {
     history:"Recent Searches",
     clearHistory:"Clear History",
     expandAll:"Expand All",
+    geoSearchPlaceholder:"Search geography...",},{
     collapseAll:"Collapse All",
     clearGeography:"Clear Geography",
     selectedGeo:"Selected Geography",
@@ -309,6 +356,7 @@ const LANG = {
     history:"最近の検索",
     clearHistory:"履歴を削除",
     expandAll:"すべて展開",
+    geoSearchPlaceholder:"地域を検索...",
     collapseAll:"すべて折りたたむ",
     clearGeography:"地域をクリア",
     selectedGeo:"選択中の地域",
@@ -332,6 +380,7 @@ const LANG = {
     history:"最近搜索",
     clearHistory:"清空历史",
     expandAll:"全部展开",
+    geoSearchPlaceholder:"搜索地区...",
     collapseAll:"全部收起",
     clearGeography:"清空 Geography",
     selectedGeo:"已选择 Geography",
@@ -355,6 +404,7 @@ const LANG = {
     history:"最近搜尋",
     clearHistory:"清除歷史",
     expandAll:"全部展開",
+    geoSearchPlaceholder:"搜尋地區...",
     collapseAll:"全部收起",
     clearGeography:"清空 Geography",
     selectedGeo:"已選擇 Geography",
@@ -378,6 +428,7 @@ const LANG = {
     history:"Сүүлийн хайлтууд",
     clearHistory:"Түүх устгах",
     expandAll:"Бүгдийг дэлгэх",
+    geoSearchPlaceholder:"Бүс хайх...", 
     collapseAll:"Бүгдийг хураах",
     clearGeography:"Geography цэвэрлэх",
     selectedGeo:"Сонгосон Geography",
@@ -584,6 +635,8 @@ function createGeoNode(node, path=[]){
   row.appendChild(checkbox);
 
   const label=document.createElement("span");
+  label.className = "geo-label";
+  label.dataset.label = node.label;
   label.textContent=node.label;
   row.appendChild(label);
   wrapper.appendChild(row);
@@ -622,7 +675,17 @@ function createGeoNode(node, path=[]){
 function renderGeoTree(){
   const container=document.getElementById("geoTree");
   container.innerHTML="";
+  GEO_SEARCH_INDEX.length = 0;
   GEO_TREE.forEach(node=>container.appendChild(createGeoNode(node)));
+
+  document.querySelectorAll('#geoTree input[type="checkbox"][data-has-children="0"]').forEach(cb=>{
+    GEO_SEARCH_INDEX.push({
+      label: cb.dataset.label,
+      path: cb.dataset.path,
+      checkbox: cb
+    });
+  });
+
   updateGeoSummary();
 }
 
@@ -665,6 +728,7 @@ function clearGeo(update=true){
     cb.checked=false;
     cb.indeterminate=false;
   });
+  clearGeoSearch();
   if(update) updateGeoSummary();
 }
 
@@ -689,6 +753,141 @@ function updateGeoSummary(){
   document.getElementById("geoSummary").textContent=`${t.selectedGeo}: ${selected.length ? selected.join(', ') : t.none}`;
 }
 
+function expandGeoPath(checkbox){
+  let node = checkbox.closest('.geo-node');
+  while(node){
+    const children = node.querySelector(':scope > .geo-children');
+    const toggle = node.querySelector(':scope > .geo-row .geo-toggle');
+    if(children){
+      children.style.display = 'block';
+      if(toggle && !toggle.classList.contains('empty')) toggle.textContent = '▾';
+    }
+    node = node.parentElement ? node.parentElement.closest('.geo-node') : null;
+  }
+}
+
+function escapeHtml(text){
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function highlightMatch(text, keyword){
+  if(!keyword) return escapeHtml(text);
+  const safeText = escapeHtml(text);
+  const safeKeyword = escapeHtml(keyword.trim());
+  if(!safeKeyword) return safeText;
+  const escaped = safeKeyword.replace(/[.*+?^${}()|[\]\]/g, '\$&');
+  return safeText.replace(new RegExp(`(${escaped})`, 'ig'), '<span class="geo-highlight">$1</span>');
+}
+
+function applyGeoHighlight(keyword){
+  document.querySelectorAll('#geoTree .geo-label').forEach(labelEl=>{
+    const raw = labelEl.dataset.label || labelEl.textContent || '';
+    labelEl.innerHTML = highlightMatch(raw, keyword);
+  });
+}
+
+function renderGeoSuggestions(keyword){
+  const box=document.getElementById('geoSuggestions');
+  if(!keyword){
+    box.style.display='none';
+    box.innerHTML='';
+    return;
+  }
+
+  const q=keyword.trim().toLowerCase();
+  const matched=GEO_SEARCH_INDEX.filter(item=>
+    item.label.toLowerCase().includes(q) || item.path.toLowerCase().includes(q)
+  ).slice(0,12);
+
+  if(!matched.length){
+    box.style.display='none';
+    box.innerHTML='';
+    return;
+  }
+
+  box.innerHTML = matched.map(item => `
+    <div class="geo-suggestion-item" onclick="selectGeoByLabel('${item.label.replace(/'/g, "\'")}')">
+      <div>${highlightMatch(item.label, keyword)}</div>
+      <div class="geo-muted">${highlightMatch(item.path, keyword)}</div>
+    </div>
+  `).join('');
+  box.style.display='block';
+}
+
+function handleGeoSearch(){
+  const input=document.getElementById('geoSearch');
+  const rawKeyword=input.value.trim();
+  const keyword=rawKeyword.toLowerCase();
+  const nodes=[...document.querySelectorAll('#geoTree .geo-node')];
+
+  if(!keyword){
+    nodes.forEach(node=>node.style.display='');
+    document.getElementById('geoSuggestions').style.display='none';
+    applyGeoHighlight('');
+    collapseAllGeo();
+    return;
+  }
+
+  nodes.forEach(node=>node.style.display='none');
+  document.querySelectorAll('#geoTree input[type="checkbox"][data-has-children="0"]').forEach(cb=>{
+    const label=cb.dataset.label.toLowerCase();
+    const path=cb.dataset.path.toLowerCase();
+    if(label.includes(keyword) || path.includes(keyword)){
+      let node=cb.closest('.geo-node');
+      while(node){
+        node.style.display='';
+        const children=node.querySelector(':scope > .geo-children');
+        const toggle=node.querySelector(':scope > .geo-row .geo-toggle');
+        if(children){
+          children.style.display='block';
+          if(toggle && !toggle.classList.contains('empty')) toggle.textContent='▾';
+        }
+        node=node.parentElement ? node.parentElement.closest('.geo-node') : null;
+      }
+    }
+  });
+
+  applyGeoHighlight(rawKeyword);
+  renderGeoSuggestions(rawKeyword);
+}
+
+function clearGeoSearch(){
+  const input=document.getElementById('geoSearch');
+  const box=document.getElementById('geoSuggestions');
+  input.value='';
+  box.style.display='none';
+  box.innerHTML='';
+  document.querySelectorAll('#geoTree .geo-node').forEach(node=>node.style.display='');
+  applyGeoHighlight('');
+  collapseAllGeo();
+}
+
+function selectGeoByLabel(label){
+  const entry=GEO_SEARCH_INDEX.find(item=>item.label===label);
+  if(!entry) return;
+  entry.checkbox.checked = true;
+  expandGeoPath(entry.checkbox);
+  updateGeoParents();
+  updateGeoSummary();
+  clearGeoSearch();
+}
+
+document.addEventListener('click', (e) => {
+  const wrap=document.querySelector('.geo-search-wrap');
+  if(!wrap) return;
+  if(!wrap.contains(e.target)){
+    const box=document.getElementById('geoSuggestions');
+    if(box){
+      box.style.display='none';
+    }
+  }
+});
+
 function applyLanguage(){
   const lang=document.getElementById("lang").value;
   const t=LANG[lang]||LANG.en;
@@ -710,11 +909,14 @@ function applyLanguage(){
   document.getElementById("ui_geo_expand").innerText=t.expandAll;
   document.getElementById("ui_geo_collapse").innerText=t.collapseAll;
   document.getElementById("ui_geo_clear").innerText=t.clearGeography;
+  const geoSearch=document.getElementById("geoSearch");
+  if(geoSearch) geoSearch.placeholder=t.geoSearchPlaceholder || "Search geography...";
   updateGeoSummary();
 }
 
 addKeywordGroup("");
 renderGeoTree();
+collapseAllGeo();
 renderHistory();
 applyLanguage();
 </script>
